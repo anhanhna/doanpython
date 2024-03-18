@@ -1,0 +1,12 @@
+1. Chạy Face_Detect.py để phát hiện khuôn mặt
+
+2. Chạy Encode_Faces.py để mã hóa tất cả khuôn mặt,
+chương trình sẽ lưu dữ liệu khuôn mặt vô file
+face_encodings.npy
+
+3. Chạy Recognize.py để SVM vừa train tất cả khuôn mặt
+trong file face_encodings.npy vừa nhận diện khuôn mặt trên
+webcam ( 1: mặt tui, 2: Obama, 3: ElonMusk, 4: JoeBiden,
+5: C.Ronaldo ) nên khi chạy file này thì lấy ảnh của mấy
+ông này trên mạng đưa lên webcam rồi nhấn space để chương
+trình nhận diện là ai

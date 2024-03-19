@@ -8,21 +8,42 @@
 <body>
     <h1>Product Management</h1>
     <form method="POST" action="/add">
+        <label for="id">Product ID:</label>
+        <input type="text" id="id" name="id" required><br><br>
         <label for="name">Product Name:</label>
         <input type="text" id="name" name="name" required><br><br>
         <label for="price">Product Price:</label>
         <input type="text" id="price" name="price" required><br><br>
-        <label for="price">Product Number:</label>
-        <input type="text" id="number" name="number" required><br><br>
-        <button type="submit" id="productForm">Add Product</button>
+        <label for="quantity">Product Quantity:</label>
+        <input type="text" id="quantity" name="quantity" required><br><br>
+        <button type="submit"  id="productForm">Add Product</button>
     </form>
     <hr>
     <h2>Products:</h2>
-    <ul>
-        {% for product in products %}
-            <li>{{ product[1] }} - ${{ product[2] }}</li>
-        {% endfor %}
-    </ul>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+                <tr id="row{{ product[0] }}">
+                    <td>{{ product[0] }}</td>
+                    <td>{{ product[1] }}</td>
+                    <td>${{ product[2] }}</td>
+                    <td>{{ product[3] }}</td>
+                    <td><button class="delete-btn" data-product-id="{{ product[0] }}">Delete</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <script>
         // Lắng nghe sự kiện submit của biểu mẫu
         document.getElementById("productForm").addEventListener("submit", function(event) {
@@ -31,13 +52,13 @@
             // Lấy giá trị từ các trường input
             var name = document.getElementById("name").value;
             var price = document.getElementById("price").value;
-            var number = document.getElementById("number").value;
+            var quantity = document.getElementById("quantity").value;
 
             // Tạo một đối tượng FormData chứa dữ liệu
             var formData = new FormData();
             formData.append("name", name);
             formData.append("price", price);
-            formData.append("number", number);
+            formData.append("quantity", quantity);
 
             // Gửi yêu cầu POST đến route '/add' với dữ liệu từ biểu mẫu
             fetch("/add", {
@@ -51,6 +72,100 @@
             })
             .catch(error => console.error("Error:", error));
         });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                event.stopPropagation();
+                var productId = this.getAttribute('data-product-id');
+                deleteProduct(productId);
+            });
+            });
+        function deleteProduct(productId) {
+            fetch(`/delete/${productId}`, {
+            method: "POST" // Phương thức POST thay vì DELETE
+        })
+        .then(response => response.json())
+        .then(data => {
+        console.log(data.message); // In ra thông báo từ server
+        document.getElementById(`row${productId}`).remove(); // Xóa hàng sản phẩm khỏi bảng
+        })
+        .catch(error => console.error("Error:", error));
+}
+
+        // Lắng nghe sự kiện click trên mỗi hàng sản phẩm
+        var rows = document.querySelectorAll('#productTable tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('click', function() {
+                // Xóa lớp 'selected' khỏi tất cả các hàng khác
+                rows.forEach(row => {
+                    row.classList.remove('selected');
+                });
+
+                // Thêm lớp 'selected' vào hàng được chọn
+                this.classList.add('selected');
+            });
+        });
+        //Kiểm tra hàng nhập đã tồn tại hay chưa
+        document.getElementById("productForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var id = document.getElementById("id").value;
+        var name = document.getElementById("name").value;
+        var price = document.getElementById("price").value;
+        var quantity = document.getElementById("quantity").value;
+
+        fetch("/check_duplicate", {
+            method: "POST",
+            body: JSON.stringify({ id: id, name: name }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.duplicate) {
+                if (data.matchingName) {
+                    // Tăng số lượng của sản phẩm đã tồn tại
+                    increaseQuantity(id);
+                } else {
+                    alert("Product name does not match with existing product for the same ID.");
+                }
+            } else {
+                // Thêm sản phẩm mới vào cơ sở dữ liệu
+                addProduct(id, name, price, quantity);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+    function increaseQuantity(id) {
+        // Gửi yêu cầu POST để tăng số lượng của sản phẩm đã tồn tại
+        fetch(`/increase_quantity/${id}`, {
+            method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    }
+
+    function addProduct(id, name, price, quantity) {
+        // Gửi yêu cầu POST để thêm sản phẩm mới vào cơ sở dữ liệu
+        fetch("/add", {
+            method: "POST",
+            body: JSON.stringify({ id: id, name: name, price: price, quantity: quantity }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    }
     </script>
 </body>
 </html>

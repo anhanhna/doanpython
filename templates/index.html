@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+</head>
+<body>
+    <h1>Product Management</h1>
+    <form method="POST" action="/add">
+        <label for="name">Product Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="price">Product Price:</label>
+        <input type="text" id="price" name="price" required><br><br>
+        <label for="price">Product Number:</label>
+        <input type="text" id="number" name="number" required><br><br>
+        <button type="submit" id="productForm">Add Product</button>
+    </form>
+    <hr>
+    <h2>Products:</h2>
+    <ul>
+        {% for product in products %}
+            <li>{{ product[1] }} - ${{ product[2] }}</li>
+        {% endfor %}
+    </ul>
+    <script>
+        // Lắng nghe sự kiện submit của biểu mẫu
+        document.getElementById("productForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Ngăn chặn hành động mặc định của form
+
+            // Lấy giá trị từ các trường input
+            var name = document.getElementById("name").value;
+            var price = document.getElementById("price").value;
+            var number = document.getElementById("number").value;
+
+            // Tạo một đối tượng FormData chứa dữ liệu
+            var formData = new FormData();
+            formData.append("name", name);
+            formData.append("price", price);
+            formData.append("number", number);
+
+            // Gửi yêu cầu POST đến route '/add' với dữ liệu từ biểu mẫu
+            fetch("/add", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message); // In ra thông báo từ server
+                location.reload(); // Tải lại trang sau khi thêm sản phẩm thành công
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>

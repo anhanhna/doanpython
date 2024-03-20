@@ -62,6 +62,7 @@ def add_product():
             cursor.execute('INSERT INTO products (id, name, price, quantity) VALUES (?, ?, ?, ?)', (id, name, price, quantity))
             conn.commit()
             conn.close()
+                
             return jsonify({"message": "Data received successfully"})
     
     return redirect(url_for('index'))
@@ -109,6 +110,19 @@ def increase_quantity(id):
     conn.close()
     
     return jsonify({"message": "Quantity increased successfully"})
+
+# Route để tự động điền Name và Price khi nhập ID
+@app.route('/get_product_info/<int:id>', methods=['GET'])
+def get_product_info(id):
+    conn, cursor = connect_db()
+    cursor.execute('SELECT name, price FROM products WHERE id=?', (id,))
+    product_info = cursor.fetchone()
+    conn.close()
+
+    if product_info:
+        return jsonify({"id": id, "name": product_info[0], "price": product_info[1]})
+    else:
+        return jsonify({"error": "Product not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

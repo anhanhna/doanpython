@@ -35,7 +35,7 @@
                 <tr id="row{{ product[0] }}">
                     <td>{{ product[0] }}</td>
                     <td>{{ product[1] }}</td>
-                    <td>${{ product[2] }}</td>
+                    <td>{{ product[2] }}VND</td>
                     <td>{{ product[3] }}</td>
                     <td><button class="delete-btn" data-product-id="{{ product[0] }}">Delete</button>
                     </td>
@@ -45,33 +45,40 @@
     </table>
 
     <script>
-        // Lắng nghe sự kiện submit của biểu mẫu
-        document.getElementById("productForm").addEventListener("submit", function(event) {
-            event.preventDefault(); // Ngăn chặn hành động mặc định của form
+    document.addEventListener("DOMContentLoaded", function() {
+    // Lắng nghe sự kiện submit của biểu mẫu
+    document.getElementById("productForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Ngăn chặn hành động mặc định của form
 
-            // Lấy giá trị từ các trường input
-            var name = document.getElementById("name").value;
-            var price = document.getElementById("price").value;
-            var quantity = document.getElementById("quantity").value;
+        // Lấy giá trị từ các trường input
+        var name = document.getElementById("name").value;
+        var price = document.getElementById("price").value;
+        var quantity = document.getElementById("quantity").value;
 
-            // Tạo một đối tượng FormData chứa dữ liệu
-            var formData = new FormData();
-            formData.append("name", name);
-            formData.append("price", price);
-            formData.append("quantity", quantity);
+        // Tạo một đối tượng chứa dữ liệu
+        var data = {
+                name: name,
+                price: price,
+                quantity: quantity
+            };
 
-            // Gửi yêu cầu POST đến route '/add' với dữ liệu từ biểu mẫu
-            fetch("/add", {
+        // Gửi yêu cầu POST đến route '/add' với dữ liệu từ biểu mẫu
+        fetch("/add", {
                 method: "POST",
-                body: formData
+                body: JSON.stringify(data),
+                headers: {
+                    "Content-Type": "application/json"
+                }
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data.message); // In ra thông báo từ server
-                location.reload(); // Tải lại trang sau khi thêm sản phẩm thành công
-            })
-            .catch(error => console.error("Error:", error));
-        });
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message); // In ra thông báo từ server
+            // Cập nhật danh sách sản phẩm trên trang
+            location.reload(); // Tải lại trang sau khi thêm sản phẩm thành công
+        })
+        .catch(error => console.error("Error:", error));
+    });
+    });
 
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -82,15 +89,15 @@
             });
         function deleteProduct(productId) {
             fetch(`/delete/${productId}`, {
-            method: "POST" // Phương thức POST thay vì DELETE
-        })
+                method: "POST" // Phương thức POST thay vì DELETE
+            })
         .then(response => response.json())
         .then(data => {
         console.log(data.message); // In ra thông báo từ server
         document.getElementById(`row${productId}`).remove(); // Xóa hàng sản phẩm khỏi bảng
         })
         .catch(error => console.error("Error:", error));
-}
+        }
 
         // Lắng nghe sự kiện click trên mỗi hàng sản phẩm
         var rows = document.querySelectorAll('#productTable tbody tr');
@@ -166,6 +173,21 @@
         })
         .catch(error => console.error("Error:", error));
     }
+
+    // Lắng nghe sự kiện khi giá trị của ô ID thay đổi
+    document.getElementById("id").addEventListener("input", function() {
+    var id = this.value; // Lấy giá trị ID từ ô nhập
+
+    // Gửi yêu cầu AJAX để lấy thông tin sản phẩm với ID tương ứng
+    fetch(`/get_product_info/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            // Cập nhật giá trị Tên và Giá trên trang web
+            document.getElementById("name").value = data.name;
+            document.getElementById("price").value = data.price;
+        })
+        .catch(error => console.error("Error:", error));
+    });
     </script>
 </body>
 </html>
